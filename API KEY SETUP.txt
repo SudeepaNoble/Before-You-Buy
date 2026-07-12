@@ -1,0 +1,12 @@
+BEFORE YOU BUY — API KEY SETUP
+
+1. In Finder, press Command + Shift + . to show hidden files.
+2. Open the file named .env.local in this folder.
+3. Add your OpenAI API key after the equals sign:
+
+   OPENAI_API_KEY=your_key_here
+
+4. Save the file.
+
+Do not upload .env.local to GitHub or share the key publicly.
+
