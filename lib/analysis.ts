@@ -21,3 +21,11 @@ export const recommendationSchema = z.object({
 
 export type Answers = z.infer<typeof answerSchema>;
 export type Recommendation = z.infer<typeof recommendationSchema>;
+export type RecommendationUsage = {
+  limit: number;
+  remaining: number;
+  resetAt: string;
+};
+export type RecommendationResponse = Recommendation & {
+  usage?: RecommendationUsage;
+};

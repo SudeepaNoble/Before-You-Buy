@@ -24,7 +24,11 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import type { Answers, Recommendation } from "@/lib/analysis";
+import type {
+  Answers,
+  RecommendationResponse,
+  RecommendationUsage,
+} from "@/lib/analysis";
 import { cn } from "@/lib/utils";
 
 const questions = [
@@ -76,20 +80,28 @@ const scoreMeta = {
   regretRisk: { label: "Regret risk", goodWhenHigh: false },
 } as const;
 
+const DAILY_LIMIT_ERROR = "DAILY_LIMIT_REACHED";
+
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [productUrl, setProductUrl] = useState("");
   const [dragging, setDragging] = useState(false);
   const [answers, setAnswers] = useState<Partial<Answers>>({});
-  const [result, setResult] = useState<Recommendation | null>(null);
+  const [result, setResult] = useState<RecommendationResponse | null>(null);
+  const [usage, setUsage] = useState<RecommendationUsage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [limitNotice, setLimitNotice] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLElement>(null);
 
   const preview = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
   const allAnswered = questions.every((question) => answers[question.key]);
   const hasProduct = Boolean(file || productUrl.trim());
+  const noChecksLeft = Boolean(limitNotice || usage?.remaining === 0);
 
   useEffect(
     () => () => {
@@ -128,7 +140,10 @@ export default function Home() {
 
   async function analyzeProduct(event: FormEvent) {
     event.preventDefault();
+    if (isLoading || noChecksLeft) return;
+
     setError("");
+    setLimitNotice(null);
 
     if (!hasProduct) {
       setError("Add a screenshot or product link to continue.");
@@ -151,7 +166,6 @@ export default function Home() {
     }
 
     setIsLoading(true);
-    setResult(null);
 
     try {
       const formData = new FormData();
@@ -166,9 +180,23 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "We could not analyze this product.");
+        if (data.error === DAILY_LIMIT_ERROR) {
+          setUsage({
+            limit: data.limit,
+            remaining: data.remaining,
+            resetAt: data.resetAt,
+          });
+          setLimitNotice({
+            title: "You’ve used your 2 checks for today.",
+            message: "Come back tomorrow before your next checkout.",
+          });
+          return;
+        }
+
+        throw new Error(data.message || data.error || "We could not analyze this product.");
       }
 
+      if (data.usage) setUsage(data.usage);
       setResult(data);
       requestAnimationFrame(() =>
         resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
@@ -185,11 +213,14 @@ export default function Home() {
   }
 
   function reset() {
+    if (noChecksLeft) return;
+
     setFile(null);
     setProductUrl("");
     setAnswers({});
     setResult(null);
     setError("");
+    setLimitNotice(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -214,6 +245,8 @@ export default function Home() {
           hasProduct={hasProduct}
           inputRef={inputRef}
           isLoading={isLoading}
+          limitNotice={limitNotice}
+          noChecksLeft={noChecksLeft}
           onAnswer={chooseAnswer}
           onDragChange={setDragging}
           onDrop={handleDrop}
@@ -297,6 +330,8 @@ type DecisionFormProps = {
   hasProduct: boolean;
   inputRef: React.RefObject<HTMLInputElement | null>;
   isLoading: boolean;
+  limitNotice: { title: string; message: string } | null;
+  noChecksLeft: boolean;
   onAnswer: (key: keyof Answers, value: string) => void;
   onDragChange: (dragging: boolean) => void;
   onDrop: (event: DragEvent<HTMLDivElement>) => void;
@@ -317,6 +352,8 @@ function DecisionForm({
   hasProduct,
   inputRef,
   isLoading,
+  limitNotice,
+  noChecksLeft,
   onAnswer,
   onDragChange,
   onDrop,
@@ -496,9 +533,19 @@ function DecisionForm({
         </p>
       )}
 
+      {limitNotice && (
+        <div
+          className="mt-5 rounded-xl bg-[#fbeef1] px-3 py-2.5 text-[#98485a]"
+          role="alert"
+        >
+          <p className="text-[11px] font-semibold">{limitNotice.title}</p>
+          <p className="mt-1 text-[10px] leading-4">{limitNotice.message}</p>
+        </div>
+      )}
+
       <Button
         className="mt-6 w-full rounded-xl bg-[#2b2432] text-[12px] tracking-[0.01em] hover:bg-[#3c3144]"
-        disabled={!hasProduct || !allAnswered || isLoading}
+        disabled={!hasProduct || !allAnswered || isLoading || noChecksLeft}
         size="lg"
         type="submit"
       >
@@ -507,6 +554,8 @@ function DecisionForm({
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
             Analyzing whether it&apos;s worth it...
           </>
+        ) : noChecksLeft ? (
+          "Come back tomorrow"
         ) : (
           <>
             Get my recommendation
@@ -536,9 +585,15 @@ const ResultsStep = function ResultsStep({
 }: {
   onReset: () => void;
   ref: React.Ref<HTMLElement>;
-  result: Recommendation;
+  result: RecommendationResponse;
 }) {
   const verdict = verdictStyles[result.verdict];
+  const usageMessage =
+    result.usage?.remaining === 1
+      ? "1 check left today."
+      : result.usage?.remaining === 0
+        ? "That was your last check for today."
+        : "";
 
   return (
     <section
@@ -560,10 +615,19 @@ const ResultsStep = function ResultsStep({
               : ""}
           </p>
         </div>
-        <Button onClick={onReset} size="sm" type="button" variant="outline">
-          <RotateCcw size={13} />
-          Try another
-        </Button>
+        <div className="flex flex-col items-start gap-2 sm:items-end">
+          {usageMessage && (
+            <p className="text-[10px] font-medium text-[#7d7483]">
+              {usageMessage}
+            </p>
+          )}
+          {result.usage?.remaining !== 0 && (
+            <Button onClick={onReset} size="sm" type="button" variant="outline">
+              <RotateCcw size={13} />
+              Try another
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[0.82fr_1.18fr]">

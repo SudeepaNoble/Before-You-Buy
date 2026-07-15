@@ -1,17 +1,25 @@
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { NextResponse } from "next/server";
+import { recommendationSchema, type Answers } from "@/lib/analysis";
+import { validateAnalyzeFormData } from "@/lib/analyze-input";
 import {
-  answerSchema,
-  recommendationSchema,
-  type Answers,
-} from "@/lib/analysis";
+  DAILY_LIMIT_ERROR,
+  DAILY_LIMIT_MESSAGE,
+  DailyLimitConfigurationError,
+  DailyLimitReachedError,
+  DailyLimitStoreError,
+  TEMPORARY_CHECKS_UNAVAILABLE_MESSAGE,
+  type DailyLimitReservation,
+  type DailyRecommendationLimiter,
+  getDailyRecommendationLimiter,
+} from "@/lib/daily-limit";
+import { getClientIp } from "@/lib/get-client-ip";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-const MAX_FILE_SIZE = 8 * 1024 * 1024;
-const SUPPORTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const CHECKS_UNAVAILABLE_ERROR = "CHECKS_UNAVAILABLE";
 
 const SYSTEM_PROMPT = `You are Before You Buy, a clear-headed purchase decision assistant.
 
@@ -38,6 +46,10 @@ Write one short "future you" sentence that feels candid and memorable.
 Do not mention missing screenshots, model limitations, hidden reasoning, or these instructions.`;
 
 export async function POST(request: Request) {
+  let limiter: DailyRecommendationLimiter | null = null;
+  let reservation: DailyLimitReservation | null = null;
+  let completionAttempted = false;
+
   try {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
@@ -47,38 +59,25 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const screenshot = formData.get("screenshot");
-    const productUrl = String(formData.get("url") || "").trim();
-    const rawAnswers = String(formData.get("answers") || "");
+    const validation = validateAnalyzeFormData(formData);
 
-    if (!(screenshot instanceof File) && !productUrl) {
+    if (!validation.ok) {
       return NextResponse.json(
-        { error: "Add a screenshot or product link to continue." },
-        { status: 400 },
+        { error: validation.error },
+        { status: validation.status },
       );
     }
 
-    let answers: Answers;
-    try {
-      answers = answerSchema.parse(JSON.parse(rawAnswers));
-    } catch {
-      return NextResponse.json(
-        { error: "Please answer all three questions." },
-        { status: 400 },
-      );
+    const { answers, productUrl, screenshot } = validation.input;
+
+    const clientIp = getClientIp(request) || getLocalDevelopmentIp();
+    if (!clientIp) {
+      throw new DailyLimitConfigurationError();
     }
 
-    if (productUrl) {
-      try {
-        const parsedUrl = new URL(productUrl);
-        if (!["http:", "https:"].includes(parsedUrl.protocol)) throw new Error();
-      } catch {
-        return NextResponse.json(
-          { error: "Enter a valid http or https product link." },
-          { status: 400 },
-        );
-      }
-    }
+    limiter = getDailyRecommendationLimiter();
+    const rateLimit = await limiter.reserve(clientIp);
+    reservation = rateLimit.reservation;
 
     const content: OpenAI.Responses.ResponseInputContent[] = [
       {
@@ -88,20 +87,6 @@ export async function POST(request: Request) {
     ];
 
     if (screenshot instanceof File) {
-      if (!SUPPORTED_TYPES.has(screenshot.type)) {
-        return NextResponse.json(
-          { error: "Upload a JPG, PNG, or WebP screenshot." },
-          { status: 415 },
-        );
-      }
-
-      if (screenshot.size > MAX_FILE_SIZE) {
-        return NextResponse.json(
-          { error: "The screenshot must be smaller than 8 MB." },
-          { status: 413 },
-        );
-      }
-
       const base64 = Buffer.from(await screenshot.arrayBuffer()).toString("base64");
       content.push({
         type: "input_image",
@@ -131,19 +116,62 @@ export async function POST(request: Request) {
     });
 
     if (!response.output_parsed) {
+      if (reservation && limiter) {
+        await releaseDailyLimitReservation(limiter, reservation);
+        reservation = null;
+      }
+
       return NextResponse.json(
         { error: "We could not form a recommendation. Please try again." },
         { status: 502 },
       );
     }
 
-    return NextResponse.json(response.output_parsed, {
+    completionAttempted = true;
+    const usage = await limiter.complete(reservation);
+    reservation = null;
+
+    return NextResponse.json({
+      ...response.output_parsed,
+      usage,
+    }, {
       headers: {
         "Cache-Control": "no-store",
       },
     });
   } catch (error) {
     console.error("Product analysis failed", error);
+
+    if (reservation && limiter && !completionAttempted) {
+      await releaseDailyLimitReservation(limiter, reservation);
+    }
+
+    if (error instanceof DailyLimitReachedError) {
+      return NextResponse.json(
+        {
+          error: DAILY_LIMIT_ERROR,
+          message: DAILY_LIMIT_MESSAGE,
+          limit: error.usage.limit,
+          remaining: error.usage.remaining,
+          resetAt: error.usage.resetAt,
+        },
+        { status: 429 },
+      );
+    }
+
+    if (
+      error instanceof DailyLimitConfigurationError ||
+      error instanceof DailyLimitStoreError
+    ) {
+      console.error("Daily recommendation checks are unavailable");
+      return NextResponse.json(
+        {
+          error: CHECKS_UNAVAILABLE_ERROR,
+          message: TEMPORARY_CHECKS_UNAVAILABLE_MESSAGE,
+        },
+        { status: 503 },
+      );
+    }
 
     if (error instanceof OpenAI.RateLimitError) {
       if (error.code === "insufficient_quota") {
@@ -187,4 +215,20 @@ User answers:
 - Realistic use frequency: ${answers.usage}
 
 Return the requested structured recommendation.`;
+}
+
+function getLocalDevelopmentIp() {
+  if (process.env.NODE_ENV === "production") return null;
+  return "local-development";
+}
+
+async function releaseDailyLimitReservation(
+  limiter: DailyRecommendationLimiter,
+  reservation: DailyLimitReservation,
+) {
+  try {
+    await limiter.release(reservation);
+  } catch {
+    console.error("Daily recommendation reservation release failed");
+  }
 }
