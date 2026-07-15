@@ -231,7 +231,17 @@ export default function Home() {
       )}
 
       <footer className="mx-auto flex w-full max-w-6xl flex-col gap-3 border-t border-[#ddd5df]/70 px-5 py-7 text-[11px] text-[#7d7483] sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <span>© Before You Buy</span>
+        <span>
+          © Before You Buy · by{" "}
+          <a
+            className="text-inherit underline-offset-2 transition hover:text-[#6e5679] hover:underline"
+            href="https://sudeepakolli.framer.website/"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Sudeepa Kolli
+          </a>
+        </span>
         <span>No affiliate links. No shopping agenda. Just a second opinion.</span>
       </footer>
     </main>
@@ -240,30 +250,23 @@ export default function Home() {
 
 function Header({ onReset }: { onReset: () => void }) {
   return (
-    <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8 sm:py-6">
+    <header className="mx-auto flex w-full max-w-6xl items-center px-5 py-5 sm:px-8 sm:py-6">
       <button
         aria-label="Go to start"
-        className="flex items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6f537e]"
+        className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6f537e]"
         onClick={onReset}
       >
-        <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-[#27212e] text-white shadow-sm">
-          <Check aria-hidden="true" size={15} strokeWidth={3} />
-        </span>
         <span className="text-[13px] font-semibold tracking-[-0.015em] text-[#2d2634]">
           Before You Buy
         </span>
       </button>
-      <div className="flex items-center gap-2 text-[11px] font-medium text-[#756b7b]">
-        <ShieldCheck size={14} />
-        Private by design
-      </div>
     </header>
   );
 }
 
 function Intro() {
   return (
-    <div className="lg:sticky lg:top-16 lg:self-start">
+    <div className="lg:sticky lg:top-16 lg:self-center">
       <div className="inline-flex items-center gap-2 rounded-full border border-[#ded4e3] bg-white/55 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6e5679] backdrop-blur">
         <Sparkles size={12} />
         Make the pause count
@@ -281,30 +284,6 @@ function Intro() {
         clear buy, wait, or skip recommendation in seconds.
       </p>
 
-      <div className="mt-8 grid max-w-md grid-cols-3 gap-2">
-        {[
-          ["01", "Show us the product"],
-          ["02", "Answer honestly"],
-          ["03", "Get your verdict"],
-        ].map(([number, text]) => (
-          <div
-            className="rounded-2xl border border-white/70 bg-white/45 p-3 backdrop-blur"
-            key={number}
-          >
-            <span className="text-[9px] font-bold tracking-[0.12em] text-[#896e94]">
-              {number}
-            </span>
-            <p className="mt-2 text-[11px] font-medium leading-4 text-[#5f5665]">
-              {text}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <p className="mt-7 flex items-center gap-2 text-[11px] text-[#7d7483]">
-        <LockKeyhole size={13} />
-        No account. No saved screenshots. No sales pitch.
-      </p>
     </div>
   );
 }
