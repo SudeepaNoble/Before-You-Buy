@@ -1,11 +1,81 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
+const siteUrl = "https://before-you-buy-ten.vercel.app/";
+const siteName = "Before You Buy";
+const siteDescription =
+  "Think before you checkout. Upload a product screenshot or paste a link and get an instant AI recommendation to Buy, Wait, or Skip.";
+
 export const metadata: Metadata = {
-  title: "Before You Buy — Make better purchase decisions",
-  description:
-    "Upload a product screenshot, answer three quick questions, and get an instant buy, wait, or skip recommendation.",
-  applicationName: "Before You Buy",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: siteName,
+    template: "%s · Before You Buy",
+  },
+  description: siteDescription,
+  keywords: [
+    "before you buy",
+    "buy or skip",
+    "should i buy",
+    "purchase decision",
+    "impulse buying",
+    "shopping assistant",
+    "AI shopping assistant",
+    "product recommendation",
+    "buy wait skip",
+    "online shopping",
+    "consumer AI",
+    "amazon shopping",
+    "target shopping",
+    "costco shopping",
+    "walmart shopping",
+    "shopping decisions",
+  ],
+  authors: [{ name: "Sudeepa Kolli" }],
+  creator: "Sudeepa Kolli",
+  applicationName: siteName,
+  category: "Shopping",
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: siteName,
+    description:
+      "Think before you checkout.\n\nUpload a screenshot or paste a product link and get an instant AI recommendation before spending your money.",
+    url: siteUrl,
+    siteName,
+    type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Before You Buy, an AI-powered purchase decision assistant.",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteName,
+    description:
+      "An AI purchase decision assistant that helps you avoid impulse buys.",
+    images: ["/twitter-image"],
+  },
+  appleWebApp: {
+    capable: true,
+    title: siteName,
+    statusBarStyle: "default",
+  },
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -28,7 +98,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f8f6fa",
+  themeColor: "#5e17eb",
+  colorScheme: "light",
 };
 
 export default function RootLayout({

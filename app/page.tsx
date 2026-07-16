@@ -81,6 +81,19 @@ const scoreMeta = {
 } as const;
 
 const DAILY_LIMIT_ERROR = "DAILY_LIMIT_REACHED";
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Before You Buy",
+  applicationCategory: "ShoppingApplication",
+  operatingSystem: "Web",
+  description: "Think before you checkout.",
+  url: "https://before-you-buy-ten.vercel.app/",
+  creator: {
+    "@type": "Person",
+    name: "Sudeepa Kolli",
+  },
+};
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -226,6 +239,10 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen overflow-hidden">
+      <script
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        type="application/ld+json"
+      />
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -left-24 top-32 h-80 w-80 rounded-full bg-[#e7dced]/45 blur-3xl" />
         <div className="absolute -right-28 top-0 h-96 w-96 rounded-full bg-[#f7e4d7]/55 blur-3xl" />
@@ -385,7 +402,7 @@ function DecisionForm({
 
       <div className="grid gap-3 sm:grid-cols-[0.9fr_1.1fr]">
         <div
-          aria-label="Upload product screenshot"
+          aria-label={file ? "Change product screenshot" : "Upload product screenshot"}
           className={cn(
             "group relative flex min-h-36 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed px-4 py-5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#745882]",
             dragging
@@ -448,6 +465,7 @@ function DecisionForm({
         </div>
         <input
           accept="image/jpeg,image/png,image/webp"
+          aria-label="Choose a product screenshot"
           className="hidden"
           onChange={onFileChange}
           ref={inputRef}
@@ -544,6 +562,13 @@ function DecisionForm({
       )}
 
       <Button
+        aria-label={
+          isLoading
+            ? "Analyzing your product"
+            : noChecksLeft
+              ? "Daily recommendation limit reached"
+              : "Get your recommendation"
+        }
         className="mt-6 w-full rounded-xl bg-[#2b2432] text-[12px] tracking-[0.01em] hover:bg-[#3c3144]"
         disabled={!hasProduct || !allAnswered || isLoading || noChecksLeft}
         size="lg"
