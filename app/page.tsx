@@ -233,7 +233,7 @@ export default function Home() {
 
       <Header onReset={reset} />
 
-      <section className="mx-auto grid w-full max-w-6xl gap-10 px-5 pb-20 pt-10 sm:px-8 sm:pt-14 lg:grid-cols-[0.74fr_1.26fr] lg:gap-16 lg:pt-20">
+      <section className="mx-auto grid w-full max-w-6xl gap-10 px-5 pb-20 pt-10 sm:px-8 sm:pt-14 lg:grid-cols-[0.74fr_1.26fr] lg:gap-16 lg:pt-4">
         <Intro />
 
         <DecisionForm
