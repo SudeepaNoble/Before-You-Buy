@@ -211,11 +211,12 @@ export function classifyAnalyzeFailure(input: {
 
 export function sanitizeAnalyticsUrl(url: string) {
   try {
-    const parsed = new URL(url, "https://before-you-buy-ten.vercel.app");
-    return parsed.pathname || "/";
+    const parsed = new URL(url);
+    parsed.search = "";
+    parsed.hash = "";
+    return parsed.toString();
   } catch {
-    const [path] = url.split(/[?#]/, 1);
-    return path || "/";
+    return url;
   }
 }
 
