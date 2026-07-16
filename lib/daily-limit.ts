@@ -10,6 +10,7 @@ export const DAILY_LIMIT_SUPPORTING_TEXT =
   "Come back tomorrow before your next checkout.";
 export const TEMPORARY_CHECKS_UNAVAILABLE_MESSAGE =
   "Checks are temporarily unavailable. Please try again a little later.";
+export const DAILY_LIMIT_TTL_BUFFER_SECONDS = 60 * 60;
 
 type RedisScriptClient = Pick<Redis, "eval">;
 
@@ -31,6 +32,7 @@ type DailyLimitStoreKeys = {
 };
 
 type DailyLimitStoreTiming = {
+  expiresAtEpochSeconds: number;
   limit: number;
   resetAtEpochSeconds: number;
 };
@@ -79,6 +81,7 @@ local completed = tonumber(redis.call("GET", KEYS[1]) or "0")
 local pending = tonumber(redis.call("GET", KEYS[2]) or "0")
 local limit = tonumber(ARGV[1])
 local resetAt = tonumber(ARGV[2])
+local expiresAt = tonumber(ARGV[3])
 
 if completed >= limit then
   return {0, 0}
@@ -89,8 +92,8 @@ if (completed + pending) >= limit then
 end
 
 pending = redis.call("INCR", KEYS[2])
-redis.call("EXPIREAT", KEYS[1], resetAt)
-redis.call("EXPIREAT", KEYS[2], resetAt)
+redis.call("EXPIREAT", KEYS[1], expiresAt)
+redis.call("EXPIREAT", KEYS[2], expiresAt)
 
 local remaining = limit - completed - pending
 if remaining < 0 then
@@ -103,7 +106,7 @@ return {1, remaining}
 const COMPLETE_SCRIPT = `
 local pending = tonumber(redis.call("GET", KEYS[2]) or "0")
 local limit = tonumber(ARGV[1])
-local resetAt = tonumber(ARGV[2])
+local expiresAt = tonumber(ARGV[3])
 
 if pending > 0 then
   pending = redis.call("DECR", KEYS[2])
@@ -112,11 +115,11 @@ end
 if pending <= 0 then
   redis.call("DEL", KEYS[2])
 else
-  redis.call("EXPIREAT", KEYS[2], resetAt)
+  redis.call("EXPIREAT", KEYS[2], expiresAt)
 end
 
 local completed = redis.call("INCR", KEYS[1])
-redis.call("EXPIREAT", KEYS[1], resetAt)
+redis.call("EXPIREAT", KEYS[1], expiresAt)
 
 local remaining = limit - completed
 if remaining < 0 then
@@ -128,7 +131,7 @@ return {remaining}
 
 const RELEASE_SCRIPT = `
 local pending = tonumber(redis.call("GET", KEYS[2]) or "0")
-local resetAt = tonumber(ARGV[2])
+local expiresAt = tonumber(ARGV[3])
 
 if pending > 0 then
   pending = redis.call("DECR", KEYS[2])
@@ -137,7 +140,7 @@ end
 if pending <= 0 then
   redis.call("DEL", KEYS[2])
 else
-  redis.call("EXPIREAT", KEYS[2], resetAt)
+  redis.call("EXPIREAT", KEYS[2], expiresAt)
 end
 
 return {1}
@@ -170,6 +173,7 @@ export class RedisDailyLimitStore implements DailyLimitStore {
       const result = await this.redis.eval(script, [keys.completedKey, keys.pendingKey], [
         String(timing.limit),
         String(timing.resetAtEpochSeconds),
+        String(timing.expiresAtEpochSeconds),
       ]);
 
       return parseRedisNumberArray(result, expectedValues);
@@ -191,6 +195,9 @@ export class DailyRecommendationLimiter {
     const resetAt = getNextUtcMidnight(now);
     const keys = createDailyLimitKeys(hashClientIp(clientIp, this.salt), now);
     const timing = {
+      expiresAtEpochSeconds: Math.floor(
+        (resetAt.getTime() + DAILY_LIMIT_TTL_BUFFER_SECONDS * 1000) / 1000,
+      ),
       limit: DAILY_RECOMMENDATION_LIMIT,
       resetAtEpochSeconds: Math.floor(resetAt.getTime() / 1000),
     };
@@ -302,6 +309,9 @@ function createUsage(remaining: number, resetAt: Date): DailyUsage {
 
 function timingFromReservation(reservation: DailyLimitReservation) {
   return {
+    expiresAtEpochSeconds: Math.floor(
+      (reservation.resetAt.getTime() + DAILY_LIMIT_TTL_BUFFER_SECONDS * 1000) / 1000,
+    ),
     limit: DAILY_RECOMMENDATION_LIMIT,
     resetAtEpochSeconds: Math.floor(reservation.resetAt.getTime() / 1000),
   };
