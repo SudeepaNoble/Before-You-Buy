@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { AnalyticsProvider } from "@/components/analytics-provider";
 
 const siteUrl = "https://before-you-buy-ten.vercel.app/";
 const siteName = "Before You Buy";
@@ -109,7 +110,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <AnalyticsProvider />
+      </body>
     </html>
   );
 }

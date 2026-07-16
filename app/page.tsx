@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@vercel/analytics";
 import {
   ArrowRight,
   Check,
@@ -13,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   ChangeEvent,
   DragEvent,
@@ -24,6 +26,11 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  classifyAnalyzeFailure,
+  createHomePageAnalytics,
+  mapScreenshotFileType,
+} from "@/lib/analytics";
 import type {
   Answers,
   RecommendationResponse,
@@ -108,6 +115,11 @@ export default function Home() {
     title: string;
     message: string;
   } | null>(null);
+  const [analytics] = useState(() =>
+    createHomePageAnalytics((eventName, properties) => {
+      track(eventName, properties);
+    }),
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLElement>(null);
 
@@ -122,6 +134,10 @@ export default function Home() {
     },
     [preview],
   );
+
+  useEffect(() => {
+    analytics.trackAnswersCompleted(answers);
+  }, [analytics, answers]);
 
   function acceptFile(nextFile?: File) {
     setError("");
@@ -138,6 +154,10 @@ export default function Home() {
     }
 
     setFile(nextFile);
+    const fileType = mapScreenshotFileType(nextFile.type);
+    if (fileType) {
+      analytics.trackScreenshotSelected(fileType);
+    }
   }
 
   function handleDrop(event: DragEvent<HTMLDivElement>) {
@@ -151,9 +171,17 @@ export default function Home() {
     setError("");
   }
 
+  function handleProductUrlChange(url: string) {
+    setProductUrl(url);
+    analytics.trackProductUrlAdded(url);
+  }
+
   async function analyzeProduct(event: FormEvent) {
     event.preventDefault();
     if (isLoading || noChecksLeft) return;
+
+    const hasUrl = Boolean(productUrl.trim());
+    let requestId: number | null = null;
 
     setError("");
     setLimitNotice(null);
@@ -174,9 +202,16 @@ export default function Home() {
         if (!["http:", "https:"].includes(parsedUrl.protocol)) throw new Error();
       } catch {
         setError("Enter a complete product link, including https://");
+        analytics.trackValidationFailure();
         return;
       }
     }
+
+    requestId = analytics.beginRecommendation({
+      answers: answers as Answers,
+      hasScreenshot: Boolean(file),
+      hasUrl,
+    });
 
     setIsLoading(true);
 
@@ -203,18 +238,35 @@ export default function Home() {
             title: "You’ve used your 2 checks for today.",
             message: "Come back tomorrow before your next checkout.",
           });
+          analytics.trackDailyLimitReached(requestId);
           return;
         }
+
+        analytics.failRecommendation(
+          requestId,
+          classifyAnalyzeFailure({
+            code: typeof data.code === "string" ? data.code : null,
+            status: response.status,
+          }),
+        );
 
         throw new Error(data.message || data.error || "We could not analyze this product.");
       }
 
       if (data.usage) setUsage(data.usage);
       setResult(data);
+      analytics.completeRecommendation(requestId, {
+        category: data.category,
+        hasScreenshot: Boolean(file),
+        hasUrl,
+        usage: data.usage,
+        verdict: data.verdict,
+      });
       requestAnimationFrame(() =>
         resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
       );
     } catch (requestError) {
+      analytics.failRecommendation(requestId, "unknown");
       setError(
         requestError instanceof Error
           ? requestError.message
@@ -228,6 +280,7 @@ export default function Home() {
   function reset() {
     if (noChecksLeft) return;
 
+    analytics.resetFlow();
     setFile(null);
     setProductUrl("");
     setAnswers({});
@@ -272,12 +325,17 @@ export default function Home() {
           onSubmit={analyzeProduct}
           preview={preview}
           productUrl={productUrl}
-          setProductUrl={setProductUrl}
+          setProductUrl={handleProductUrlChange}
         />
       </section>
 
       {result && (
-        <ResultsStep onReset={reset} ref={resultRef} result={result} />
+        <ResultsStep
+          onReset={reset}
+          onResultReset={() => analytics.trackResultReset()}
+          ref={resultRef}
+          result={result}
+        />
       )}
 
       <footer className="mx-auto flex w-full max-w-6xl flex-col gap-3 border-t border-[#ddd5df]/70 px-5 py-7 text-[11px] text-[#7d7483] sm:flex-row sm:items-center sm:justify-between sm:px-8">
@@ -292,7 +350,15 @@ export default function Home() {
             Sudeepa Kolli
           </a>
         </span>
-        <span>No affiliate links. No shopping agenda. Just a second opinion.</span>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span>No affiliate links. No shopping agenda. Just a second opinion.</span>
+          <Link
+            className="underline-offset-2 transition hover:text-[#6e5679] hover:underline"
+            href="/privacy"
+          >
+            Privacy
+          </Link>
+        </div>
       </footer>
     </main>
   );
@@ -605,10 +671,12 @@ function DecisionForm({
 
 const ResultsStep = function ResultsStep({
   onReset,
+  onResultReset,
   ref,
   result,
 }: {
   onReset: () => void;
+  onResultReset: () => void;
   ref: React.Ref<HTMLElement>;
   result: RecommendationResponse;
 }) {
@@ -647,7 +715,15 @@ const ResultsStep = function ResultsStep({
             </p>
           )}
           {result.usage?.remaining !== 0 && (
-            <Button onClick={onReset} size="sm" type="button" variant="outline">
+            <Button
+              onClick={() => {
+                onResultReset();
+                onReset();
+              }}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
               <RotateCcw size={13} />
               Try another
             </Button>
