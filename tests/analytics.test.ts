@@ -156,6 +156,6 @@ test("analytics url sanitization strips query strings and hashes", () => {
     sanitizeAnalyticsUrl(
       "https://before-you-buy-ten.vercel.app/?product=https://store.example/item#details",
     ),
-    "/",
+    "https://before-you-buy-ten.vercel.app/",
   );
 });
