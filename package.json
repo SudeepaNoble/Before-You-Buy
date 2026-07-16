@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "node --import tsx --test tests/**/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "eval:recommendations": "node --import tsx scripts/evaluate-recommendations.ts"
   },
   "dependencies": {
     "@upstash/redis": "^1.38.0",
