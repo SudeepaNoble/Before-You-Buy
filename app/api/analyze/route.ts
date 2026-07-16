@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { NextResponse } from "next/server";
+import type { AnalyticsFailureType } from "@/lib/analytics";
 import { validateAnalyzeFormData } from "@/lib/analyze-input";
 import {
   DAILY_LIMIT_ERROR,
@@ -26,6 +27,18 @@ export const runtime = "nodejs";
 export const maxDuration = 30;
 
 const CHECKS_UNAVAILABLE_ERROR = "CHECKS_UNAVAILABLE";
+const SERVICE_UNAVAILABLE_MESSAGE = "The recommendation service is not configured yet.";
+
+type SafeAnalyzeErrorCode =
+  | "VALIDATION"
+  | "INVALID_IMAGE"
+  | "OPENAI_AUTH"
+  | "OPENAI_BILLING"
+  | "OPENAI_TIMEOUT"
+  | "OPENAI_FAILURE"
+  | "MALFORMED_RESPONSE"
+  | "SERVICE_UNAVAILABLE"
+  | "UNKNOWN";
 
 export async function POST(request: Request) {
   let limiter: DailyRecommendationLimiter | null = null;
@@ -35,7 +48,10 @@ export async function POST(request: Request) {
   try {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: "The recommendation service is not configured yet." },
+        {
+          code: "SERVICE_UNAVAILABLE" satisfies SafeAnalyzeErrorCode,
+          error: SERVICE_UNAVAILABLE_MESSAGE,
+        },
         { status: 503 },
       );
     }
@@ -45,7 +61,12 @@ export async function POST(request: Request) {
 
     if (!validation.ok) {
       return NextResponse.json(
-        { error: validation.error },
+        {
+          code: validation.status === 413 || validation.status === 415
+            ? ("INVALID_IMAGE" satisfies SafeAnalyzeErrorCode)
+            : ("VALIDATION" satisfies SafeAnalyzeErrorCode),
+          error: validation.error,
+        },
         { status: validation.status },
       );
     }
@@ -109,7 +130,10 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json(
-        { error: "We could not form a recommendation. Please try again." },
+        {
+          code: "MALFORMED_RESPONSE" satisfies SafeAnalyzeErrorCode,
+          error: "We could not form a recommendation. Please try again.",
+        },
         { status: 502 },
       );
     }
@@ -131,7 +155,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Product analysis failed", error);
+    logSafeFailure("Product analysis failed", mapAnalyticsFailureType(error));
 
     if (reservation && limiter && !completionAttempted) {
       await releaseDailyLimitReservation(limiter, reservation);
@@ -157,6 +181,7 @@ export async function POST(request: Request) {
       console.error("Daily recommendation checks are unavailable");
       return NextResponse.json(
         {
+          code: "SERVICE_UNAVAILABLE" satisfies SafeAnalyzeErrorCode,
           error: CHECKS_UNAVAILABLE_ERROR,
           message: TEMPORARY_CHECKS_UNAVAILABLE_MESSAGE,
         },
@@ -164,10 +189,31 @@ export async function POST(request: Request) {
       );
     }
 
+    if (error instanceof OpenAI.AuthenticationError) {
+      return NextResponse.json(
+        {
+          code: "OPENAI_AUTH" satisfies SafeAnalyzeErrorCode,
+          error: SERVICE_UNAVAILABLE_MESSAGE,
+        },
+        { status: 503 },
+      );
+    }
+
+    if (error instanceof OpenAI.APIConnectionTimeoutError) {
+      return NextResponse.json(
+        {
+          code: "OPENAI_TIMEOUT" satisfies SafeAnalyzeErrorCode,
+          error: "The recommendation service timed out. Please try again.",
+        },
+        { status: 504 },
+      );
+    }
+
     if (error instanceof OpenAI.RateLimitError) {
       if (error.code === "insufficient_quota") {
         return NextResponse.json(
           {
+            code: "OPENAI_BILLING" satisfies SafeAnalyzeErrorCode,
             error:
               "OpenAI API billing is not active yet. Add billing or credits to this API project, then try again.",
           },
@@ -176,13 +222,32 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json(
-        { error: "We are handling a lot of decisions right now. Try again shortly." },
+        {
+          code: "OPENAI_FAILURE" satisfies SafeAnalyzeErrorCode,
+          error: "We are handling a lot of decisions right now. Try again shortly.",
+        },
         { status: 429 },
       );
     }
 
+    if (
+      error instanceof OpenAI.APIConnectionError ||
+      error instanceof OpenAI.InternalServerError
+    ) {
+      return NextResponse.json(
+        {
+          code: "OPENAI_FAILURE" satisfies SafeAnalyzeErrorCode,
+          error: "We could not analyze this product. Please try again.",
+        },
+        { status: 502 },
+      );
+    }
+
     return NextResponse.json(
-      { error: "We could not analyze this product. Please try again." },
+      {
+        code: "UNKNOWN" satisfies SafeAnalyzeErrorCode,
+        error: "We could not analyze this product. Please try again.",
+      },
       { status: 500 },
     );
   }
@@ -202,4 +267,42 @@ async function releaseDailyLimitReservation(
   } catch {
     console.error("Daily recommendation reservation release failed");
   }
+}
+
+function mapAnalyticsFailureType(error: unknown): AnalyticsFailureType {
+  if (error instanceof DailyLimitReachedError) {
+    return "unknown";
+  }
+
+  if (
+    error instanceof DailyLimitConfigurationError ||
+    error instanceof DailyLimitStoreError
+  ) {
+    return "service_unavailable";
+  }
+
+  if (error instanceof OpenAI.AuthenticationError) {
+    return "openai_auth";
+  }
+
+  if (error instanceof OpenAI.APIConnectionTimeoutError) {
+    return "openai_timeout";
+  }
+
+  if (error instanceof OpenAI.RateLimitError) {
+    return error.code === "insufficient_quota" ? "openai_billing" : "openai_failure";
+  }
+
+  if (
+    error instanceof OpenAI.APIConnectionError ||
+    error instanceof OpenAI.InternalServerError
+  ) {
+    return "openai_failure";
+  }
+
+  return "unknown";
+}
+
+function logSafeFailure(message: string, failureType: AnalyticsFailureType) {
+  console.error(message, { failureType });
 }
