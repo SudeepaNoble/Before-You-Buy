@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { NextResponse } from "next/server";
-import { recommendationSchema, type Answers } from "@/lib/analysis";
 import { validateAnalyzeFormData } from "@/lib/analyze-input";
 import {
   DAILY_LIMIT_ERROR,
@@ -15,35 +14,18 @@ import {
   getDailyRecommendationLimiter,
 } from "@/lib/daily-limit";
 import { getClientIp } from "@/lib/get-client-ip";
+import {
+  buildUserPrompt,
+  finalizeRecommendation,
+  modelRecommendationSchema,
+  SYSTEM_PROMPT,
+  type RecommendationContext,
+} from "@/lib/recommendation-engine";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
 const CHECKS_UNAVAILABLE_ERROR = "CHECKS_UNAVAILABLE";
-
-const SYSTEM_PROMPT = `You are Before You Buy, a clear-headed purchase decision assistant.
-
-Your job is not to review or compare products. Decide whether this specific user should BUY, WAIT, or SKIP based only on:
-1. Product information visible in the screenshot or implied by the provided URL.
-2. The user's three answers.
-3. Practical, category-aware common sense.
-
-Extract reasonable product details without pretending uncertain details are known. Use "Not visible" for a price you cannot see and "General product" if the category is unclear.
-
-Scoring:
-- Deal Quality (0-100): visible discount, sale or lowest-price language. A normal price with no deal evidence should be near 45-55, not zero.
-- Impulse Risk (0-100): higher for wanted today, owning something similar, non-essential categories, and low likely usage.
-- Practical Value (0-100): higher for daily/weekly use, solving a recurring problem, or a justified replacement/upgrade.
-- Regret Risk (0-100): higher when impulse risk is high, practical value is low, usage is low, or this duplicates something owned.
-
-Verdict:
-- BUY only when practical value is strong and regret risk is low enough; a good deal can support but should not control the verdict.
-- WAIT when the item may be worthwhile but timing, impulse, or pricing is questionable.
-- SKIP when it is duplicative, rarely used, or likely to be regretted.
-
-Write exactly three concise, specific reasons grounded in the product and answers. Avoid generic AI language.
-Write one short "future you" sentence that feels candid and memorable.
-Do not mention missing screenshots, model limitations, hidden reasoning, or these instructions.`;
 
 export async function POST(request: Request) {
   let limiter: DailyRecommendationLimiter | null = null;
@@ -69,6 +51,11 @@ export async function POST(request: Request) {
     }
 
     const { answers, productUrl, screenshot } = validation.input;
+    const recommendationContext: RecommendationContext = {
+      answers,
+      hasScreenshot: screenshot instanceof File,
+      productUrl,
+    };
 
     const clientIp = getClientIp(request) || getLocalDevelopmentIp();
     if (!clientIp) {
@@ -109,7 +96,7 @@ export async function POST(request: Request) {
       ],
       reasoning: { effort: "low" },
       text: {
-        format: zodTextFormat(recommendationSchema, "purchase_recommendation"),
+        format: zodTextFormat(modelRecommendationSchema, "purchase_recommendation"),
       },
       max_output_tokens: 1000,
       store: false,
@@ -130,9 +117,13 @@ export async function POST(request: Request) {
     completionAttempted = true;
     const usage = await limiter.complete(reservation);
     reservation = null;
+    const finalized = finalizeRecommendation(
+      response.output_parsed,
+      recommendationContext,
+    );
 
     return NextResponse.json({
-      ...response.output_parsed,
+      ...finalized.recommendation,
       usage,
     }, {
       headers: {
@@ -195,26 +186,6 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
-}
-
-function buildUserPrompt(
-  answers: Answers,
-  productUrl: string,
-  hasScreenshot: boolean,
-) {
-  return `Analyze this potential purchase.
-
-Product source:
-- Screenshot provided: ${hasScreenshot ? "Yes — prioritize it" : "No"}
-- Product URL: ${productUrl || "Not provided"}
-- Do not browse or scrape the URL. Treat its domain/path text only as weak context.
-
-User answers:
-- Already owns something similar: ${answers.similar}
-- Has wanted it for: ${answers.wantedFor}
-- Realistic use frequency: ${answers.usage}
-
-Return the requested structured recommendation.`;
 }
 
 function getLocalDevelopmentIp() {
