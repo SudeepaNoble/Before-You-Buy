@@ -9,7 +9,6 @@ import {
   LockKeyhole,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
   UploadCloud,
   X,
 } from "lucide-react";
@@ -73,9 +72,9 @@ const verdictStyles = {
     label: "Give it a little time",
   },
   SKIP: {
-    accent: "#974657",
-    soft: "#fbeef1",
-    border: "#ebc8d0",
+    accent: "#176b72",
+    soft: "#e2f1ef",
+    border: "#b8d9d5",
     label: "Your money has better plans",
   },
 };
@@ -291,17 +290,26 @@ export default function Home() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
+    <main className="relative isolate min-h-screen">
       <script
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         type="application/ld+json"
       />
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -left-24 top-32 h-80 w-80 rounded-full bg-[#e7dced]/45 blur-3xl" />
-        <div className="absolute -right-28 top-0 h-96 w-96 rounded-full bg-[#f7e4d7]/55 blur-3xl" />
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <Image
+          alt=""
+          className="object-cover"
+          fill
+          priority
+          sizes="100vw"
+          src="/AI_Bg_080.png"
+        />
       </div>
 
-      <Header onReset={reset} />
+      <header
+        aria-hidden="true"
+        className="mx-auto h-[66px] w-full max-w-6xl px-5 sm:h-[78px] sm:px-8"
+      />
 
       <section className="mx-auto grid w-full max-w-6xl gap-10 px-5 pb-20 pt-10 sm:px-8 sm:pt-14 lg:grid-cols-[0.74fr_1.26fr] lg:gap-16 lg:pt-4">
         <Intro />
@@ -338,11 +346,11 @@ export default function Home() {
         />
       )}
 
-      <footer className="mx-auto flex w-full max-w-6xl flex-col gap-3 border-t border-[#ddd5df]/70 px-5 py-7 text-[11px] text-[#7d7483] sm:flex-row sm:items-center sm:justify-between sm:px-8">
+      <footer className="mx-auto flex w-full max-w-6xl flex-col gap-3 border-t border-white/45 px-5 py-7 text-[11px] text-white/90 sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <span>
           © Before You Buy · by{" "}
           <a
-            className="text-inherit underline-offset-2 transition hover:text-[#6e5679] hover:underline"
+            className="text-inherit underline-offset-2 transition hover:text-white hover:underline"
             href="https://sudeepakolli.framer.website/"
             rel="noopener noreferrer"
             target="_blank"
@@ -353,7 +361,7 @@ export default function Home() {
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>No affiliate links. No shopping agenda. Just a second opinion.</span>
           <Link
-            className="underline-offset-2 transition hover:text-[#6e5679] hover:underline"
+            className="underline-offset-2 transition hover:text-white hover:underline"
             href="/privacy"
           >
             Privacy
@@ -364,40 +372,20 @@ export default function Home() {
   );
 }
 
-function Header({ onReset }: { onReset: () => void }) {
-  return (
-    <header className="mx-auto flex w-full max-w-6xl items-center px-5 py-5 sm:px-8 sm:py-6">
-      <button
-        aria-label="Go to start"
-        className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6f537e]"
-        onClick={onReset}
-      >
-        <span className="text-[13px] font-semibold tracking-[-0.015em] text-[#2d2634]">
-          Before You Buy
-        </span>
-      </button>
-    </header>
-  );
-}
-
 function Intro() {
   return (
     <div className="lg:sticky lg:top-16 lg:self-center">
-      <div className="inline-flex items-center gap-2 rounded-full border border-[#ded4e3] bg-white/55 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6e5679] backdrop-blur">
-        <Sparkles size={12} />
-        Make the pause count
-      </div>
-      <h1 className="font-editorial mt-6 max-w-lg text-[clamp(3.15rem,5.4vw,5rem)] leading-[0.91] tracking-[-0.06em] text-[#28212f]">
+      <h1 className="font-editorial mt-6 max-w-lg text-[clamp(3.15rem,5.4vw,5rem)] leading-[0.91] tracking-[-0.06em] text-white drop-shadow-[0_2px_12px_rgba(0,30,35,.35)]">
         Before You
         <br />
-        <span className="italic text-[#765c80]">Buy.</span>
+        <span className="italic text-[#e4f58a]">Buy.</span>
       </h1>
-      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#8b768f]">
-        A clearer answer before checkout
+      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#e5f2d5] drop-shadow-[0_1px_6px_rgba(0,30,35,.45)]">
+        Less overthinking. Fewer regret buys.
       </p>
-      <p className="mt-5 max-w-md text-[14px] leading-6 text-[#675e6c] sm:text-[15px] sm:leading-7">
-        Upload what caught your eye, answer three honest questions, and get a
-        clear buy, wait, or skip recommendation in seconds.
+      <p className="mt-5 max-w-md text-[14px] leading-6 text-white/95 drop-shadow-[0_1px_7px_rgba(0,30,35,.5)] sm:text-[15px] sm:leading-7">
+        Drop in what you&apos;re thinking of buying. Answer 3 quick questions. Get
+        a buy, wait, or skip.
       </p>
 
     </div>
@@ -452,28 +440,14 @@ function DecisionForm({
       className="rounded-[1.75rem] border border-white/80 bg-white/72 p-4 shadow-[0_28px_90px_rgba(50,39,58,.11)] backdrop-blur-xl sm:p-6"
       onSubmit={onSubmit}
     >
-      <div className="mb-5 flex items-center justify-between">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8b7c91]">
-            Your purchase check
-          </p>
-          <h2 className="mt-1 text-[17px] font-semibold tracking-[-0.025em] text-[#302838]">
-            Let&apos;s look at this clearly.
-          </h2>
-        </div>
-        <span className="rounded-full bg-[#f0eaf3] px-2.5 py-1 text-[10px] font-semibold text-[#71597d]">
-          ≈ 15 sec
-        </span>
-      </div>
-
       <div className="grid gap-3 sm:grid-cols-[0.9fr_1.1fr]">
         <div
           aria-label={file ? "Change product screenshot" : "Upload product screenshot"}
           className={cn(
-            "group relative flex min-h-36 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed px-4 py-5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#745882]",
+            "group relative flex min-h-40 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#abd4d4] px-4 py-5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#277c83]",
             dragging
-              ? "border-[#785b85] bg-[#f3edf6]"
-              : "border-[#cfc4d4] bg-[#faf8fb] hover:border-[#9f88a9] hover:bg-[#f7f2f8]",
+              ? "border-[#277c83] bg-[#cce8e7]"
+              : "bg-[#e3f2f1] hover:border-[#5a9da0] hover:bg-[#d8eeec]",
           )}
           onClick={() => inputRef.current?.click()}
           onDragEnter={() => onDragChange(true)}
@@ -513,7 +487,7 @@ function DecisionForm({
             </>
           ) : (
             <>
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#ece3f0] text-[#73527f] transition-transform group-hover:-translate-y-0.5">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#c5e5e5] text-[#176b72] transition-transform group-hover:-translate-y-0.5">
                 <UploadCloud size={19} strokeWidth={1.8} />
               </span>
               <span className="mt-3 text-[12px] font-semibold text-[#403646]">
@@ -522,7 +496,7 @@ function DecisionForm({
               <span className="mt-1 text-[10px] leading-4 text-[#887e8e]">
                 Drop or browse · max 8 MB
               </span>
-              <span className="mt-2.5 inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#71577c]">
+              <span className="mt-2.5 inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#176b72]">
                 <ImagePlus size={12} />
                 Choose image
               </span>
@@ -538,26 +512,26 @@ function DecisionForm({
           type="file"
         />
 
-        <div className="flex flex-col justify-center rounded-2xl border border-[#e3dde6] bg-white/80 p-4">
-          <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#918697]">
-            Or use a link
+        <div className="flex flex-col justify-center rounded-2xl border border-[#e8e2eb] bg-white/55 p-4">
+          <span className="text-[9px] font-semibold lowercase tracking-[0.08em] text-[#a096a7]">
+            or paste a link
           </span>
           <label className="relative mt-2.5 block">
             <Link2
               aria-hidden="true"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8f8296]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5f9295]"
               size={13}
             />
             <input
               aria-label="Product link"
-              className="h-10 w-full rounded-xl border border-[#ddd6e1] bg-[#fcfbfc] pl-9 pr-3 text-[10px] text-[#302838] outline-none transition placeholder:text-[10px] placeholder:text-[#aaa1ad] focus:border-[#92749f] focus:ring-3 focus:ring-[#92749f]/10"
+              className="h-10 w-full rounded-xl border border-[#c9dedd] bg-[#fbfdfc] pl-9 pr-3 text-[10px] text-[#302838] outline-none transition placeholder:text-[10px] placeholder:text-[#9caeae] focus:border-[#5a9da0] focus:ring-3 focus:ring-[#5a9da0]/15"
               onChange={(event) => setProductUrl(event.target.value)}
               placeholder="Paste a product link"
               type="url"
               value={productUrl}
             />
           </label>
-          <p className="mt-2 text-[9px] leading-4 text-[#908696]">
+          <p className="mt-2 text-[9px] leading-4 text-[#a39aa8]">
             Screenshots give the most useful recommendation.
           </p>
         </div>
@@ -569,10 +543,7 @@ function DecisionForm({
         {questions.map((question) => (
           <fieldset key={question.key}>
             <legend className="flex w-full items-baseline gap-2.5">
-              <span className="text-[9px] font-bold tracking-[0.12em] text-[#9a82a4]">
-                {question.number}
-              </span>
-              <span className="text-[13px] font-semibold tracking-[-0.015em] text-[#403746]">
+              <span className="text-[13px] font-semibold tracking-[-0.015em] text-[#24585b]">
                 {question.title}
               </span>
             </legend>
@@ -590,10 +561,10 @@ function DecisionForm({
                   <button
                     aria-pressed={selected}
                     className={cn(
-                      "min-h-9 rounded-[10px] border px-2.5 py-1.5 text-[9px] font-medium leading-3.5 tracking-[0.005em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#745882]",
+                      "min-h-9 rounded-[10px] border px-2.5 py-1.5 text-[9px] font-medium leading-3.5 tracking-[0.005em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#277c83]",
                       selected
-                        ? "border-[#6f527b] bg-[#6f527b] text-white shadow-sm"
-                        : "border-[#ded7e1] bg-white/75 text-[#665d6c] hover:border-[#aa96b2] hover:bg-white",
+                        ? "border-[#277c83] bg-[#277c83] text-white shadow-sm"
+                        : "border-[#d1e0df] bg-white/75 text-[#526b6c] hover:border-[#76adaf] hover:bg-white",
                     )}
                     onClick={() => onAnswer(question.key, option)}
                     type="button"
@@ -635,7 +606,7 @@ function DecisionForm({
               ? "Daily recommendation limit reached"
               : "Get your recommendation"
         }
-        className="mt-6 w-full rounded-xl bg-[#2b2432] text-[12px] tracking-[0.01em] hover:bg-[#3c3144]"
+        className="mt-6 w-full rounded-xl bg-[#176b72] text-[12px] tracking-[0.01em] hover:bg-[#125960] disabled:bg-[#9bc5c3] disabled:text-[#eaf7f4] disabled:opacity-100"
         disabled={!hasProduct || !allAnswered || isLoading || noChecksLeft}
         size="lg"
         type="submit"
@@ -687,6 +658,16 @@ const ResultsStep = function ResultsStep({
       : result.usage?.remaining === 0
         ? "That was your last check for today."
         : "";
+  const verdictMessage = {
+    BUY: "You'll probably use this enough to justify it.",
+    WAIT: "You want it, but you don't need it today.",
+    SKIP: "You probably don&apos;t need another one.",
+  }[result.verdict];
+  const nextStep = {
+    BUY: "Looks like a purchase you'll actually use.",
+    WAIT: "Come back in a week. If you still want it, that's a better signal.",
+    SKIP: "Still thinking about it? Give it 7 days. If you still want it then, reconsider.",
+  }[result.verdict];
 
   return (
     <section
@@ -695,10 +676,7 @@ const ResultsStep = function ResultsStep({
     >
       <div className="mb-5 flex flex-col items-start justify-between gap-3 border-t border-[#ddd5df]/70 pt-12 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8c7c92]">
-            Your recommendation
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.045em] text-[#2e2735] sm:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-[-0.045em] text-[#2e2735] sm:text-3xl">
             {result.productName || "Your product"}
           </h2>
           <p className="mt-1.5 text-[11px] text-[#776e7d]">
@@ -749,9 +727,9 @@ const ResultsStep = function ResultsStep({
             {result.verdict}
           </p>
           <p className="mt-2 text-[12px] font-semibold text-[#554b5b]">
-            {verdict.label}
+            {verdictMessage}
           </p>
-          <div className="mt-7 rounded-2xl border border-white/70 bg-white/55 p-4">
+          <div className="mt-7">
             <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#857889]">
               Future you says
             </p>
@@ -759,11 +737,14 @@ const ResultsStep = function ResultsStep({
               “{result.futureYouSays}”
             </p>
           </div>
+          <p className="mt-6 text-[10px] font-medium leading-4 text-[#625968]">
+            {nextStep}
+          </p>
         </div>
 
         <div className="rounded-[1.75rem] border border-white/80 bg-white/72 p-5 shadow-[0_18px_55px_rgba(57,44,68,.07)] backdrop-blur sm:p-6">
           <h3 className="text-[15px] font-semibold tracking-[-0.025em] text-[#332b3a]">
-            Why this recommendation
+            Why
           </h3>
           <ul className="mt-4 grid gap-3">
             {result.reasons.map((reason) => (
@@ -777,19 +758,19 @@ const ResultsStep = function ResultsStep({
                 >
                   <Check size={11} strokeWidth={3} />
                 </span>
-                <span>{reason}</span>
+                <span>{formatReason(reason)}</span>
               </li>
             ))}
           </ul>
 
-          <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-7 grid grid-cols-4 gap-2 border-t border-[#e7e1e9] pt-4">
             {(Object.keys(scoreMeta) as Array<keyof typeof scoreMeta>).map(
               (key) => (
-                <ScoreCard
+                <ScoreMetric
                   goodWhenHigh={scoreMeta[key].goodWhenHigh}
                   key={key}
                   label={scoreMeta[key].label}
-                  value={result[key]}
+                  value={key === "dealQuality" && result.price === "Not visible" ? null : result[key]}
                 />
               ),
             )}
@@ -800,28 +781,47 @@ const ResultsStep = function ResultsStep({
   );
 };
 
-function ScoreCard({
+function formatReason(reason: string) {
+  const [firstSentence, ...rest] = reason.split(/(?<=\.)\s+/);
+  if (!rest.length) return reason;
+  return (
+    <>
+      <strong className="font-semibold text-[#403746]">{firstSentence}</strong>{" "}
+      <span className="text-[#817786]">{rest.join(" ")}</span>
+    </>
+  );
+}
+
+function ScoreMetric({
   goodWhenHigh,
   label,
   value,
 }: {
   goodWhenHigh: boolean;
   label: string;
-  value: number;
+  value: number | null;
 }) {
+  if (value === null) {
+    return (
+      <div>
+        <p className="text-[9px] font-medium text-[#817786]">{label}</p>
+        <p className="mt-1 text-[12px] font-semibold text-[#817786]">—</p>
+      </div>
+    );
+  }
   const isPositive = goodWhenHigh ? value >= 60 : value < 45;
   const isCaution = value >= 40 && value < 70;
   const color = isPositive ? "#357764" : isCaution ? "#a06c2f" : "#a34c60";
 
   return (
-    <div className="rounded-xl border border-[#e7e1e9] bg-[#fcfbfc] p-3">
-      <div className="flex items-end justify-between gap-2">
-        <p className="text-[9px] font-medium leading-3 text-[#716776]">{label}</p>
-        <p className="text-base font-bold tracking-[-0.04em] text-[#332b3a]">
+    <div>
+      <div className="flex items-end justify-between gap-1">
+        <p className="text-[9px] font-medium leading-3 text-[#817786]">{label}</p>
+        <p className="text-[12px] font-semibold tracking-[-0.04em] text-[#554b5b]">
           {value}
         </p>
       </div>
-      <Progress className="mt-2 h-1.5" indicatorColor={color} value={value} />
+      <Progress className="mt-2 h-1" indicatorColor={color} value={value} />
     </div>
   );
 }
