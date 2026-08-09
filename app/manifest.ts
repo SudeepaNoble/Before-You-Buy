@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
       "Before You Buy is an AI-powered purchase decision assistant. Upload a product screenshot or paste a product link, answer three quick questions, and get a simple recommendation: Buy, Wait, or Skip.",
     start_url: "/",
     display: "standalone",
-    background_color: "#f8f6fa",
+    background_color: "#eaf4ef",
     theme_color: "#176b72",
     icons: [
       {

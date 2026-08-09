@@ -5,7 +5,7 @@ import { AnalyticsProvider } from "@/components/analytics-provider";
 const siteUrl = "https://before-you-buy-ten.vercel.app/";
 const siteName = "Before You Buy";
 const siteDescription =
-  "Think before you checkout. Upload a product screenshot or paste a link and get an instant AI recommendation to Buy, Wait, or Skip.";
+  "Less overthinking. Fewer regret buys. Upload a product screenshot or paste a link and get a clear Buy, Wait, or Skip recommendation.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: siteName,
     description:
-      "Think before you checkout.\n\nUpload a screenshot or paste a product link and get an instant AI recommendation before spending your money.",
+      "Less overthinking. Fewer regret buys. Upload a screenshot or paste a product link and get a clear recommendation before spending your money.",
     url: siteUrl,
     siteName,
     type: "website",
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteName,
     description:
-      "An AI purchase decision assistant that helps you avoid impulse buys.",
+      "A calmer, friend-like purchase decision assistant for fewer regret buys.",
     images: ["/twitter-image"],
   },
   appleWebApp: {

@@ -14,8 +14,8 @@ export default function OpenGraphImage() {
         style={{
           alignItems: "center",
           background:
-            "radial-gradient(circle at 12% 12%, rgba(229, 213, 241, 0.95), transparent 34%), radial-gradient(circle at 88% 18%, rgba(255, 227, 211, 0.9), transparent 28%), linear-gradient(180deg, #f8f6fa 0%, #f4eff8 100%)",
-          color: "#292334",
+            "radial-gradient(circle at 12% 12%, rgba(185, 222, 214, 0.95), transparent 34%), radial-gradient(circle at 88% 18%, rgba(224, 241, 160, 0.82), transparent 28%), linear-gradient(180deg, #edf6ef 0%, #dceee7 100%)",
+          color: "#17484d",
           display: "flex",
           height: "100%",
           justifyContent: "space-between",
@@ -33,7 +33,7 @@ export default function OpenGraphImage() {
         >
           <div
             style={{
-              color: "#6e5679",
+              color: "#176b72",
               display: "flex",
               fontSize: 24,
               fontWeight: 700,
@@ -60,7 +60,7 @@ export default function OpenGraphImage() {
           </div>
           <div
             style={{
-              color: "#544b5a",
+              color: "#315e61",
               display: "flex",
               fontSize: 32,
               lineHeight: 1.35,
@@ -74,9 +74,9 @@ export default function OpenGraphImage() {
         <div
           style={{
             alignItems: "center",
-            background: "linear-gradient(160deg, #9c3ef5 0%, #4a0dff 100%)",
+            background: "linear-gradient(160deg, #2d8b8f 0%, #176b72 100%)",
             borderRadius: "999px",
-            boxShadow: "0 26px 80px rgba(84, 39, 157, 0.22)",
+            boxShadow: "0 26px 80px rgba(23, 107, 114, 0.25)",
             display: "flex",
             height: "260px",
             justifyContent: "center",
