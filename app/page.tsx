@@ -298,7 +298,7 @@ export default function Home() {
       <div className="pointer-events-none fixed inset-0 -z-10">
         <Image
           alt=""
-          className="object-cover"
+          className="object-cover object-[42%_center]"
           fill
           priority
           sizes="100vw"
@@ -311,7 +311,7 @@ export default function Home() {
         className="mx-auto h-[66px] w-full max-w-6xl px-5 sm:h-[78px] sm:px-8"
       />
 
-      <section className="mx-auto grid w-full max-w-6xl gap-10 px-5 pb-20 pt-10 sm:px-8 sm:pt-14 lg:grid-cols-[0.74fr_1.26fr] lg:gap-16 lg:pt-4">
+      <section className="mx-auto grid w-full max-w-6xl gap-10 px-5 pb-20 pt-10 sm:px-8 sm:pt-14 lg:grid-cols-[0.74fr_1.26fr] lg:items-center lg:gap-10 lg:pt-4">
         <Intro />
 
         <DecisionForm
@@ -383,7 +383,7 @@ function Intro() {
       <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#e5f2d5] drop-shadow-[0_1px_6px_rgba(0,30,35,.45)]">
         Less overthinking. Fewer regret buys.
       </p>
-      <p className="mt-5 max-w-md text-[14px] leading-6 text-white/95 drop-shadow-[0_1px_7px_rgba(0,30,35,.5)] sm:text-[15px] sm:leading-7">
+      <p className="mt-5 max-w-lg text-[14px] leading-6 text-white/95 drop-shadow-[0_1px_7px_rgba(0,30,35,.5)] sm:text-[15px] sm:leading-7">
         Drop in what you&apos;re thinking of buying. Answer 3 quick questions. Get
         a buy, wait, or skip.
       </p>
@@ -437,7 +437,7 @@ function DecisionForm({
 }: DecisionFormProps) {
   return (
     <form
-      className="rounded-[1.75rem] border border-white/80 bg-white/72 p-4 shadow-[0_28px_90px_rgba(50,39,58,.11)] backdrop-blur-xl sm:p-6"
+      className="rounded-[1.75rem] border border-white/85 bg-[#fffdf8]/88 p-4 shadow-[0_28px_90px_rgba(50,39,58,.14)] backdrop-blur-xl sm:p-6"
       onSubmit={onSubmit}
     >
       <div className="grid gap-3 sm:grid-cols-[0.9fr_1.1fr]">
@@ -606,7 +606,7 @@ function DecisionForm({
               ? "Daily recommendation limit reached"
               : "Get your recommendation"
         }
-        className="mt-6 w-full rounded-xl bg-[#176b72] text-[12px] tracking-[0.01em] hover:bg-[#125960] disabled:bg-[#9bc5c3] disabled:text-[#eaf7f4] disabled:opacity-100"
+        className="mt-6 w-full rounded-xl bg-[#176b72] text-[12px] tracking-[0.01em] hover:bg-[#125960] disabled:bg-[#5d8f8d] disabled:text-[#eaf7f4] disabled:opacity-100"
         disabled={!hasProduct || !allAnswered || isLoading || noChecksLeft}
         size="lg"
         type="submit"
