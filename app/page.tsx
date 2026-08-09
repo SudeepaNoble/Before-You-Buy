@@ -359,7 +359,26 @@ export default function Home() {
           </a>
         </span>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span>No affiliate links. No shopping agenda. Just a second opinion.</span>
+          <span>
+            <a
+              className="underline-offset-2 transition hover:text-white hover:underline"
+              href="https://github.com/SudeepaNoble/Before-You-Buy/"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Open source
+            </a>{" "}
+            · use it with your own API key, or{" "}
+            <a
+              className="underline-offset-2 transition hover:text-white hover:underline"
+              href="https://github.com/SudeepaNoble/Before-You-Buy/"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              contribute
+            </a>
+            .
+          </span>
           <Link
             className="underline-offset-2 transition hover:text-white hover:underline"
             href="/privacy"
