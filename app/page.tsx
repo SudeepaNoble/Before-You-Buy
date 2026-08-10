@@ -361,7 +361,7 @@ export default function Home() {
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>
             <a
-              className="underline-offset-2 transition hover:text-white hover:underline"
+              className="text-[#176b72] underline-offset-2 transition hover:text-[#125960] hover:underline"
               href="https://github.com/SudeepaNoble/Before-You-Buy/"
               rel="noopener noreferrer"
               target="_blank"
@@ -693,7 +693,7 @@ const ResultsStep = function ResultsStep({
       className="mx-auto w-full max-w-6xl scroll-mt-6 px-5 pb-24 sm:px-8"
       ref={ref}
     >
-      <div className="mb-5 flex flex-col items-start justify-between gap-3 border-t border-[#ddd5df]/70 pt-12 sm:flex-row sm:items-end">
+      <div className="mb-5 flex flex-col items-start justify-between gap-3 rounded-2xl border border-white/75 bg-[#fffdf8]/88 p-4 shadow-[0_14px_42px_rgba(50,39,58,.08)] backdrop-blur sm:flex-row sm:items-end sm:p-5">
         <div>
           <h2 className="text-2xl font-semibold tracking-[-0.045em] text-[#2e2735] sm:text-3xl">
             {result.productName || "Your product"}
