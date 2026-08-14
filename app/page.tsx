@@ -73,8 +73,8 @@ const verdictStyles = {
   },
   SKIP: {
     accent: "#176b72",
-    soft: "#e2f1ef",
-    border: "#b8d9d5",
+    soft: "#e5f0f3",
+    border: "#bdd6df",
     label: "Your money has better plans",
   },
 };
@@ -302,7 +302,7 @@ export default function Home() {
           fill
           priority
           sizes="100vw"
-          src="/AI_Bg_080.png"
+          src="/AI_Bg_X_Mountain.jpg"
         />
       </div>
 
@@ -361,7 +361,7 @@ export default function Home() {
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>
             <a
-              className="text-[#176b72] underline-offset-2 transition hover:text-[#125960] hover:underline"
+              className="text-white underline-offset-2 transition hover:text-[#d9f0ed] hover:underline"
               href="https://github.com/SudeepaNoble/Before-You-Buy/"
               rel="noopener noreferrer"
               target="_blank"
@@ -394,15 +394,15 @@ export default function Home() {
 function Intro() {
   return (
     <div className="lg:sticky lg:top-16 lg:self-center">
-      <h1 className="font-editorial mt-6 max-w-lg text-[clamp(3.15rem,5.4vw,5rem)] leading-[0.91] tracking-[-0.06em] text-white drop-shadow-[0_2px_12px_rgba(0,30,35,.35)]">
+      <h1 className="font-editorial mt-6 max-w-lg text-[clamp(3.15rem,5.4vw,5rem)] leading-[0.91] tracking-[-0.06em] text-[#173b57] drop-shadow-[0_2px_10px_rgba(245,239,218,.65)]">
         Before You
         <br />
-        <span className="italic text-[#e4f58a]">Buy.</span>
+        <span className="italic text-[#9a6a2b]">Buy.</span>
       </h1>
-      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#e5f2d5] drop-shadow-[0_1px_6px_rgba(0,30,35,.45)]">
+      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#294f6c] drop-shadow-[0_1px_5px_rgba(245,239,218,.7)]">
         Less overthinking. Fewer regret buys.
       </p>
-      <p className="mt-5 max-w-lg text-[14px] leading-6 text-white/95 drop-shadow-[0_1px_7px_rgba(0,30,35,.5)] sm:text-[15px] sm:leading-7">
+      <p className="mt-5 max-w-lg text-[14px] leading-6 text-[#24445f] drop-shadow-[0_1px_6px_rgba(245,239,218,.7)] sm:text-[15px] sm:leading-7">
         Drop in what you&apos;re thinking of buying. Answer 3 quick questions. Get
         a buy, wait, or skip.
       </p>
@@ -456,17 +456,17 @@ function DecisionForm({
 }: DecisionFormProps) {
   return (
     <form
-      className="rounded-[1.75rem] border border-white/85 bg-[#fffdf8]/88 p-4 shadow-[0_28px_90px_rgba(50,39,58,.14)] backdrop-blur-xl sm:p-6"
+      className="rounded-[1.75rem] border border-[#f7f0dc]/90 bg-[#f9f6eb]/90 p-4 shadow-[0_28px_90px_rgba(24,53,78,.18)] backdrop-blur-xl sm:p-6"
       onSubmit={onSubmit}
     >
       <div className="grid gap-3 sm:grid-cols-[0.9fr_1.1fr]">
         <div
           aria-label={file ? "Change product screenshot" : "Upload product screenshot"}
           className={cn(
-            "group relative flex min-h-40 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#abd4d4] px-4 py-5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#277c83]",
+            "group relative flex min-h-40 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#b9cfdb] px-4 py-5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#315f7a]",
             dragging
-              ? "border-[#277c83] bg-[#cce8e7]"
-              : "bg-[#e3f2f1] hover:border-[#5a9da0] hover:bg-[#d8eeec]",
+              ? "border-[#315f7a] bg-[#d8e6ed]"
+              : "bg-[#e6eff3] hover:border-[#789caf] hover:bg-[#dce9ee]",
           )}
           onClick={() => inputRef.current?.click()}
           onDragEnter={() => onDragChange(true)}
@@ -506,7 +506,7 @@ function DecisionForm({
             </>
           ) : (
             <>
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#c5e5e5] text-[#176b72] transition-transform group-hover:-translate-y-0.5">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#d0e1e8] text-[#315f7a] transition-transform group-hover:-translate-y-0.5">
                 <UploadCloud size={19} strokeWidth={1.8} />
               </span>
               <span className="mt-3 text-[12px] font-semibold text-[#403646]">
@@ -515,7 +515,7 @@ function DecisionForm({
               <span className="mt-1 text-[10px] leading-4 text-[#887e8e]">
                 Drop or browse · max 8 MB
               </span>
-              <span className="mt-2.5 inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#176b72]">
+              <span className="mt-2.5 inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#315f7a]">
                 <ImagePlus size={12} />
                 Choose image
               </span>
@@ -531,19 +531,19 @@ function DecisionForm({
           type="file"
         />
 
-        <div className="flex flex-col justify-center rounded-2xl border border-[#e8e2eb] bg-white/55 p-4">
+        <div className="flex flex-col justify-center rounded-2xl border border-[#d6e0e4] bg-[#f7f8f3]/70 p-4">
           <span className="text-[9px] font-semibold lowercase tracking-[0.08em] text-[#a096a7]">
             or paste a link
           </span>
           <label className="relative mt-2.5 block">
             <Link2
               aria-hidden="true"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5f9295]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b8da1]"
               size={13}
             />
             <input
               aria-label="Product link"
-              className="h-10 w-full rounded-xl border border-[#c9dedd] bg-[#fbfdfc] pl-9 pr-3 text-[10px] text-[#302838] outline-none transition placeholder:text-[10px] placeholder:text-[#9caeae] focus:border-[#5a9da0] focus:ring-3 focus:ring-[#5a9da0]/15"
+              className="h-10 w-full rounded-xl border border-[#c9d8df] bg-[#fbfdfc] pl-9 pr-3 text-[10px] text-[#24445f] outline-none transition placeholder:text-[10px] placeholder:text-[#9caeba] focus:border-[#789caf] focus:ring-3 focus:ring-[#789caf]/15"
               onChange={(event) => setProductUrl(event.target.value)}
               placeholder="Paste a product link"
               type="url"
@@ -556,13 +556,13 @@ function DecisionForm({
         </div>
       </div>
 
-      <div className="my-6 h-px bg-[#e7e1e9]" />
+          <div className="my-6 h-px bg-[#d5e0e3]" />
 
       <div className="space-y-5">
         {questions.map((question) => (
           <fieldset key={question.key}>
             <legend className="flex w-full items-baseline gap-2.5">
-              <span className="text-[13px] font-semibold tracking-[-0.015em] text-[#24585b]">
+              <span className="text-[13px] font-semibold tracking-[-0.015em] text-[#173b57]">
                 {question.title}
               </span>
             </legend>
@@ -580,10 +580,10 @@ function DecisionForm({
                   <button
                     aria-pressed={selected}
                     className={cn(
-                      "min-h-9 rounded-[10px] border px-2.5 py-1.5 text-[9px] font-medium leading-3.5 tracking-[0.005em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#277c83]",
+                      "min-h-9 rounded-[10px] border px-2.5 py-1.5 text-[9px] font-medium leading-3.5 tracking-[0.005em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#315f7a]",
                       selected
-                        ? "border-[#277c83] bg-[#277c83] text-white shadow-sm"
-                        : "border-[#d1e0df] bg-white/75 text-[#526b6c] hover:border-[#76adaf] hover:bg-white",
+                        ? "border-[#173b57] bg-[#173b57] text-white shadow-sm"
+                        : "border-[#c9d8df] bg-white/75 text-[#294f6c] hover:border-[#789caf] hover:bg-white",
                     )}
                     onClick={() => onAnswer(question.key, option)}
                     type="button"
@@ -625,7 +625,7 @@ function DecisionForm({
               ? "Daily recommendation limit reached"
               : "Get your recommendation"
         }
-        className="mt-6 w-full rounded-xl bg-[#176b72] text-[12px] tracking-[0.01em] hover:bg-[#125960] disabled:bg-[#5d8f8d] disabled:text-[#eaf7f4] disabled:opacity-100"
+        className="mt-6 w-full rounded-xl bg-[#173b57] text-[12px] tracking-[0.01em] hover:bg-[#24445f] disabled:bg-[#7891a1] disabled:text-[#edf3f5] disabled:opacity-100"
         disabled={!hasProduct || !allAnswered || isLoading || noChecksLeft}
         size="lg"
         type="submit"
@@ -695,10 +695,10 @@ const ResultsStep = function ResultsStep({
     >
       <div className="mb-5 flex flex-col items-start justify-between gap-3 rounded-2xl border border-white/75 bg-[#fffdf8]/88 p-4 shadow-[0_14px_42px_rgba(50,39,58,.08)] backdrop-blur sm:flex-row sm:items-end sm:p-5">
         <div>
-          <h2 className="text-2xl font-semibold tracking-[-0.045em] text-[#2e2735] sm:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-[-0.045em] text-[#173b57] sm:text-3xl">
             {result.productName || "Your product"}
           </h2>
-          <p className="mt-1.5 text-[11px] text-[#776e7d]">
+          <p className="mt-1.5 text-[11px] text-[#496b83]">
             {result.category || "General product"}
             {result.price && result.price !== "Not visible"
               ? ` · ${result.price}`
@@ -707,7 +707,7 @@ const ResultsStep = function ResultsStep({
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
           {usageMessage && (
-            <p className="text-[10px] font-medium text-[#7d7483]">
+            <p className="text-[10px] font-medium text-[#496b83]">
               {usageMessage}
             </p>
           )}
@@ -745,30 +745,30 @@ const ResultsStep = function ResultsStep({
           >
             {result.verdict}
           </p>
-          <p className="mt-2 text-[12px] font-semibold text-[#554b5b]">
+          <p className="mt-2 text-[12px] font-semibold text-[#24445f]">
             {verdictMessage}
           </p>
           <div className="mt-7">
-            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#857889]">
+            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#496b83]">
               Future you says
             </p>
-            <p className="font-editorial mt-2 text-xl italic leading-7 text-[#342c3b]">
+            <p className="font-editorial mt-2 text-xl italic leading-7 text-[#173b57]">
               “{result.futureYouSays}”
             </p>
           </div>
-          <p className="mt-6 text-[10px] font-medium leading-4 text-[#625968]">
+          <p className="mt-6 text-[10px] font-medium leading-4 text-[#496b83]">
             {nextStep}
           </p>
         </div>
 
         <div className="rounded-[1.75rem] border border-white/80 bg-white/72 p-5 shadow-[0_18px_55px_rgba(57,44,68,.07)] backdrop-blur sm:p-6">
-          <h3 className="text-[15px] font-semibold tracking-[-0.025em] text-[#332b3a]">
+          <h3 className="text-[15px] font-semibold tracking-[-0.025em] text-[#173b57]">
             Why
           </h3>
           <ul className="mt-4 grid gap-3">
             {result.reasons.map((reason) => (
               <li
-                className="flex gap-2.5 text-[11px] leading-5 text-[#625968]"
+                className="flex gap-2.5 text-[11px] leading-5 text-[#496b83]"
                 key={reason}
               >
                 <span
@@ -805,8 +805,8 @@ function formatReason(reason: string) {
   if (!rest.length) return reason;
   return (
     <>
-      <strong className="font-semibold text-[#403746]">{firstSentence}</strong>{" "}
-      <span className="text-[#817786]">{rest.join(" ")}</span>
+      <strong className="font-semibold text-[#24445f]">{firstSentence}</strong>{" "}
+      <span className="text-[#668196]">{rest.join(" ")}</span>
     </>
   );
 }
