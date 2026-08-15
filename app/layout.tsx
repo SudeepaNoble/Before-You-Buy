@@ -91,7 +91,7 @@ export const metadata: Metadata = {
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
     other: [
-      { rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#176b72" },
+      { rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#315f7a" },
     ],
   },
 };
@@ -99,7 +99,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#176b72",
+  themeColor: "#315f7a",
   colorScheme: "light",
 };
 
