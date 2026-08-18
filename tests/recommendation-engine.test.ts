@@ -5,6 +5,7 @@ import {
   evaluateLegacyScenarioOutcome,
   evaluateScenarioOutcome,
   finalizeRecommendation,
+  validateRecommendationConsistency,
   type ModelRecommendation,
 } from "../lib/recommendation-engine";
 
@@ -16,6 +17,7 @@ for (const scenario of recommendationScenarios) {
       confidence: "medium",
       dealQuality: scenario.dealQuality,
       productName: scenario.productName,
+      price: scenario.price,
       productUrl: scenario.productUrl,
     });
 
@@ -122,4 +124,44 @@ test("finalizeRecommendation keeps rare duplicate novelty purchases out of WAIT"
   assert.equal(result.recommendation.verdict, "SKIP");
   assert.equal(result.recommendation.practicalValue <= 45, true);
   assert.equal(result.recommendation.regretRisk >= 62, true);
+});
+
+test("finalizeRecommendation repairs contradictory long-standing daily-use output", () => {
+  const context = {
+    answers: {
+      similar: "No" as const,
+      wantedFor: "More than a month" as const,
+      usage: "Daily" as const,
+    },
+    hasScreenshot: true,
+    productUrl: "",
+  };
+  const result = finalizeRecommendation(
+    {
+      category: "Hair tool",
+      confidence: "medium",
+      dealQuality: 72,
+      futureYouSays: "Glad I waited a week and forgot about it.",
+      impulseRisk: 55,
+      practicalValue: 62,
+      price: "$329.99 refurbished",
+      productName: "Dyson Airwrap Multi-Styler Complete Long Diffuse",
+      reasons: [
+        "You already own something similar.",
+        "You probably will not use it much.",
+        "This could just be a passing impulse.",
+      ],
+      regretRisk: 52,
+      verdict: "WAIT",
+    },
+    context,
+  );
+
+  assert.equal(result.recommendation.verdict, "BUY");
+  assert.equal(result.recommendation.futureYouSays, "I use this enough to justify it.");
+  assert.equal(
+    validateRecommendationConsistency(result.recommendation, context).length,
+    0,
+  );
+  assert.equal(result.recommendation.reasons.some((reason) => /you already own|wait a week|won't use|will not use/i.test(reason)), false);
 });

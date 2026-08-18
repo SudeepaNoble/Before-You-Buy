@@ -351,7 +351,7 @@ export default function Home() {
           © Before You Buy · by{" "}
           <a
             className="text-inherit underline-offset-2 transition hover:text-white hover:underline"
-            href="https://sudeepakolli.framer.website/"
+            href="https://sudeepanoble.github.io/"
             rel="noopener noreferrer"
             target="_blank"
           >

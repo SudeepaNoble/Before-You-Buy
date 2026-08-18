@@ -16,6 +16,7 @@ export type RecommendationScenario = {
   expectedVerdict: Verdict;
   id: string;
   productName: string;
+  price?: string;
   productUrl?: string;
 };
 
@@ -424,5 +425,70 @@ export const recommendationScenarios: RecommendationScenario[] = [
       regretRisk: [15, 50],
     },
     explanation: "A small but frequent-use replacement can be a sensible buy.",
+  },
+  {
+    id: "dyson-airwrap-refurbished",
+    productName: "Dyson Airwrap Multi-Styler Complete Long Diffuse (Refurbished)",
+    category: "Hair tool",
+    answers: { similar: "No", wantedFor: "More than a month", usage: "Daily" },
+    expectedVerdict: "BUY",
+    acceptableAlternates: ["WAIT"],
+    dealQuality: 72,
+    expectedScoreRanges: {
+      dealQuality: [55, 90],
+      impulseRisk: [0, 35],
+      practicalValue: [70, 100],
+      regretRisk: [0, 45],
+    },
+    explanation: "Long-standing daily intent with no similar tool is a decisive positive fit; deal timing can still modify confidence.",
+  },
+  {
+    id: "worn-running-shoes",
+    productName: "Replacement running shoes",
+    category: "Running shoes",
+    answers: { similar: "Yes", wantedFor: "More than a month", usage: "Daily" },
+    expectedVerdict: "BUY",
+    acceptableAlternates: ["WAIT"],
+    dealQuality: 50,
+    expectedScoreRanges: {
+      dealQuality: [35, 65],
+      impulseRisk: [0, 40],
+      practicalValue: [65, 100],
+      regretRisk: [10, 50],
+    },
+    explanation: "A worn-out replacement supporting an existing routine is not ordinary duplicate ownership.",
+  },
+  {
+    id: "single-purpose-waffle-maker",
+    productName: "Single-purpose mini waffle maker",
+    category: "Kitchen appliance",
+    answers: { similar: "No", wantedFor: "Just today", usage: "Rarely" },
+    expectedVerdict: "SKIP",
+    acceptableAlternates: ["WAIT"],
+    dealQuality: 80,
+    expectedScoreRanges: {
+      dealQuality: [65, 95],
+      impulseRisk: [65, 100],
+      practicalValue: [0, 40],
+      regretRisk: [65, 100],
+    },
+    explanation: "A strong discount cannot rescue novelty excitement and rare expected use.",
+  },
+  {
+    id: "price-unknown-desk-chair",
+    productName: "Ergonomic desk chair",
+    category: "Work chair",
+    answers: { similar: "No", wantedFor: "About a week", usage: "Daily" },
+    expectedVerdict: "BUY",
+    acceptableAlternates: ["WAIT"],
+    dealQuality: 50,
+    price: "Not visible",
+    expectedScoreRanges: {
+      dealQuality: [40, 60],
+      impulseRisk: [15, 55],
+      practicalValue: [65, 100],
+      regretRisk: [20, 60],
+    },
+    explanation: "Unknown deal quality should affect timing confidence, not erase strong daily functional value.",
   },
 ];
