@@ -11,7 +11,7 @@ export const recommendationSchema = z.object({
   price: z.string(),
   category: z.string(),
   verdict: z.enum(["BUY", "WAIT", "SKIP"]),
-  dealQuality: z.number().int().min(0).max(100),
+  dealQuality: z.number().int().min(0).max(100).nullable(),
   impulseRisk: z.number().int().min(0).max(100),
   practicalValue: z.number().int().min(0).max(100),
   regretRisk: z.number().int().min(0).max(100),

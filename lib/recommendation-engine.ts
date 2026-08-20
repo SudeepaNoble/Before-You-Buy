@@ -19,6 +19,12 @@ export type RecommendationEvaluation = {
   verdict: Verdict;
 };
 
+export type RecommendationConsistencyIssue =
+  | "answer_reason_contradiction"
+  | "score_verdict_contradiction"
+  | "future_verdict_contradiction"
+  | "invalid_deal_quality";
+
 type CategoryGroup =
   | "reading"
   | "electronics"
@@ -177,18 +183,27 @@ export function finalizeRecommendation(
   const evaluation = evaluateRecommendation(adjusted, context, signals);
   const verdict = chooseFinalVerdict(adjusted.verdict, evaluation);
   const aligned = alignScoresWithVerdict({ ...adjusted, verdict }, signals);
+  const repairedReasons = repairReasons(aligned.reasons, context, signals);
+  const futureYouSays = buildFutureYouSays(verdict, context);
+  const consistencyIssues = validateRecommendationConsistency(
+    { ...aligned, verdict, reasons: repairedReasons, futureYouSays },
+    context,
+  );
+  const safeReasons = consistencyIssues.includes("answer_reason_contradiction")
+    ? buildInvariantReasons(context, verdict, signals)
+    : repairedReasons;
 
   return {
     confidence: evaluation.confidence,
     recommendation: {
       category: aligned.category,
       dealQuality: aligned.dealQuality,
-      futureYouSays: alignFutureYouSays(aligned.futureYouSays, verdict, evaluation.confidence),
+      futureYouSays,
       impulseRisk: aligned.impulseRisk,
       practicalValue: aligned.practicalValue,
       price: aligned.price,
       productName: aligned.productName,
-      reasons: aligned.reasons,
+      reasons: safeReasons,
       regretRisk: aligned.regretRisk,
       verdict,
     },
@@ -407,12 +422,12 @@ function adjustScores(
   }
 
   if (signals.lowInfo) {
-    dealQuality = Math.max(40, Math.min(60, dealQuality));
+    dealQuality = null;
   }
 
   return {
     ...recommendation,
-    dealQuality: clampScore(dealQuality),
+    dealQuality: dealQuality === null ? null : clampScore(dealQuality),
     impulseRisk: clampScore(impulseRisk),
     practicalValue: clampScore(practicalValue),
     regretRisk: clampScore(regretRisk),
@@ -437,8 +452,8 @@ function evaluateRecommendation(
     !signals.cosmeticUpgradeRisk;
 
   const strongBuy =
-    recommendation.practicalValue >= 70 &&
-    recommendation.regretRisk <= 50 &&
+    recommendation.practicalValue >= 68 &&
+    recommendation.regretRisk <= 55 &&
     (dailyOrWeekly || signals.replenishmentLikely || meaningfulUpgrade) &&
     (!signals.aspirationalRisk || wantedLong);
 
@@ -452,6 +467,22 @@ function evaluateRecommendation(
 
   if (strongBuy) {
     notes.push("strong_buy_signals");
+  }
+
+  const decisiveBuy =
+    context.answers.similar === "No" &&
+    context.answers.usage === "Daily" &&
+    context.answers.wantedFor === "More than a month" &&
+    recommendation.practicalValue >= 60 &&
+    recommendation.regretRisk <= 60;
+
+  if (decisiveBuy) {
+    notes.push("decisive_user_fit");
+    return {
+      confidence: recommendation.confidence === "low" ? "medium" : recommendation.confidence,
+      notes,
+      verdict: "BUY",
+    };
   }
 
   if (strongSkip) {
@@ -554,7 +585,7 @@ function alignScoresWithVerdict(
     next.regretRisk = clampScore(next.regretRisk);
   }
 
-  next.dealQuality = clampScore(next.dealQuality);
+  next.dealQuality = next.dealQuality === null ? null : clampScore(next.dealQuality);
   next.impulseRisk = clampScore(next.impulseRisk);
   next.practicalValue = clampScore(next.practicalValue);
   next.regretRisk = clampScore(next.regretRisk);
@@ -562,26 +593,116 @@ function alignScoresWithVerdict(
   return next;
 }
 
-function alignFutureYouSays(
-  current: string,
-  verdict: Verdict,
-  confidence: Confidence,
-) {
-  if (current.trim().length > 0 && !/^based on|^the analysis/i.test(current.trim())) {
-    return current;
-  }
-
+export function buildFutureYouSays(verdict: Verdict, context: RecommendationContext) {
   if (verdict === "BUY") {
-    return confidence === "high"
-      ? "Future you will probably be glad this became part of your routine."
-      : "Future you will probably appreciate this if you use it the way you expect.";
+    return context.answers.usage === "Daily"
+      ? "I use this enough to justify it."
+      : "Glad I bought something I actually use.";
   }
 
   if (verdict === "SKIP") {
-    return "Future you will likely prefer the saved money to another duplicate.";
+    return context.answers.similar === "Yes"
+      ? "Glad I did not add another version of what I already own."
+      : "Glad I did not add another thing I barely use.";
   }
 
-  return "If you still want it soon, that will be a much better signal.";
+  return context.answers.wantedFor === "More than a month"
+    ? "Glad I waited until the timing felt right."
+    : "Glad I gave this a little more time before deciding.";
+}
+
+export function validateRecommendationConsistency(
+  recommendation: Pick<
+    ModelRecommendation,
+    "dealQuality" | "futureYouSays" | "impulseRisk" | "practicalValue" | "regretRisk" | "reasons" | "verdict"
+  >,
+  context: RecommendationContext,
+) {
+  const issues: RecommendationConsistencyIssue[] = [];
+  const reasonText = recommendation.reasons.join(" ").toLowerCase();
+  const futureText = recommendation.futureYouSays.toLowerCase();
+
+  if (context.answers.similar === "No" && /you already own|you own something similar|duplicate/.test(reasonText)) {
+    issues.push("answer_reason_contradiction");
+  }
+  if (context.answers.usage === "Daily" && /rarely|won't use|will not use|barely use|low use|not use/.test(reasonText)) {
+    issues.push("answer_reason_contradiction");
+  }
+  if (context.answers.wantedFor === "More than a month" && /wait a week|(?<!not just a )passing impulse|few days/.test(reasonText)) {
+    issues.push("answer_reason_contradiction");
+  }
+  if (recommendation.verdict === "BUY" && /wait|regret|clutter|didn't buy|did not buy/.test(futureText)) {
+    issues.push("future_verdict_contradiction");
+  }
+  if (recommendation.verdict === "WAIT" && !/wait|time|later/.test(futureText)) {
+    issues.push("future_verdict_contradiction");
+  }
+  if (recommendation.verdict === "SKIP" && !/skip|didn't|did not|forgot|barely/.test(futureText)) {
+    issues.push("future_verdict_contradiction");
+  }
+  if (
+    (recommendation.verdict === "BUY" && recommendation.practicalValue < 55 && recommendation.regretRisk > 75) ||
+    (recommendation.verdict === "SKIP" && recommendation.practicalValue > 85 && recommendation.regretRisk < 25)
+  ) {
+    issues.push("score_verdict_contradiction");
+  }
+  if (recommendation.dealQuality !== null && (recommendation.dealQuality < 0 || recommendation.dealQuality > 100)) {
+    issues.push("invalid_deal_quality");
+  }
+
+  return [...new Set(issues)];
+}
+
+function repairReasons(reasons: string[], context: RecommendationContext, signals: Signals) {
+  return reasons.map((reason) => {
+    const lower = reason.toLowerCase();
+    if (context.answers.similar === "No" && /already own|own something similar|duplicate/.test(lower)) {
+      return "You do not already own something similar.";
+    }
+    if (context.answers.usage === "Daily" && /rarely|won't use|will not use|barely use|low use|not use/.test(lower)) {
+      return "You expect to use this daily, which gives it a real place in your routine.";
+    }
+    if (context.answers.wantedFor === "More than a month" && /wait a week|(?<!not just a )passing impulse|few days/.test(lower)) {
+      return "You have wanted this for more than a month, so this is not just a passing impulse.";
+    }
+    if (context.answers.similar === "Yes, but I want an upgrade" && /duplicate/.test(lower)) {
+      return signals.cosmeticUpgradeRisk
+        ? "The upgrade looks mostly cosmetic rather than a clear functional need."
+        : "The upgrade needs to solve a real problem to justify replacing what you have.";
+    }
+    return reason;
+  });
+}
+
+function buildInvariantReasons(
+  context: RecommendationContext,
+  verdict: Verdict,
+  signals: Signals,
+) {
+  const reasons = [
+    context.answers.similar === "No"
+      ? "You do not already own something similar."
+      : context.answers.similar === "Yes, but I want an upgrade"
+        ? signals.cosmeticUpgradeRisk
+          ? "The upgrade looks mostly cosmetic rather than essential."
+          : "The upgrade needs to solve a real problem to justify replacing what you have."
+        : signals.replenishmentLikely
+          ? "This looks more like a replenishment than an unnecessary duplicate."
+          : "You already own something similar, so the need is less clear.",
+    context.answers.usage === "Daily"
+      ? "You expect to use this daily, which gives it a real place in your routine."
+      : context.answers.usage === "Rarely"
+        ? "You expect to use it rarely, which raises the chance of regret."
+        : `You expect to use it ${context.answers.usage.toLowerCase()}, so the value depends on realistic follow-through.`,
+    context.answers.wantedFor === "More than a month"
+      ? "You have wanted this for more than a month, so this is not just a passing impulse."
+      : context.answers.wantedFor === "Just today"
+        ? "You only started wanting it today, so the excitement may still be doing some of the deciding."
+        : "You have wanted it for about a week, so the timing is worth considering.",
+  ];
+
+  if (verdict === "BUY") return reasons;
+  return reasons;
 }
 
 function clampScore(value: number) {

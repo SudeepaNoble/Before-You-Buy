@@ -26,6 +26,7 @@ const reports: ScenarioReport[] = recommendationScenarios.map((scenario) => {
     confidence: "medium",
     dealQuality: scenario.dealQuality,
     productName: scenario.productName,
+    price: scenario.price,
     productUrl: scenario.productUrl,
   }).verdict;
 
